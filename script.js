@@ -1306,7 +1306,7 @@
   ];
 
   let allActivities = [];
-  let currentView = "tiles";
+  let currentView = "tabs";
   let currentGroupFilter = "all";
   let currentCalYear = 2025;
   let currentCalMonth = 2; // March (0-indexed)

@@ -64,13 +64,13 @@
       </div>
 
       <div class="view-switcher" role="tablist" aria-label="Switch views">
-        <button class="switcher-btn active" id="tilesViewBtn" role="tab" aria-selected="true" aria-controls="tilesViewSection">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
-          Tiles View
-        </button>
-        <button class="switcher-btn" id="tabsViewBtn" role="tab" aria-selected="false" aria-controls="tabsViewSection">
+        <button class="switcher-btn active" id="tabsViewBtn" role="tab" aria-selected="true" aria-controls="tabsViewSection">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
           Tabs View
+        </button>
+        <button class="switcher-btn" id="tilesViewBtn" role="tab" aria-selected="false" aria-controls="tilesViewSection">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+          Tiles View
         </button>
         <button class="switcher-btn" id="calendarViewBtn" role="tab" aria-selected="false" aria-controls="calendarViewSection">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -87,7 +87,11 @@
       <span class="legend-item"><span class="legend-dot gray"></span>Not yet attempted</span>
     </div>
 
-    <section id="tilesViewSection" class="view-section" role="tabpanel">
+    <section id="tabsViewSection" class="view-section" role="tabpanel">
+      <div id="tabsContainer" class="tabs-container"></div>
+    </section>
+
+    <section id="tilesViewSection" class="view-section hidden" role="tabpanel">
       <div class="filter-bar" role="navigation">
         <button class="filter-btn active" data-group="all">All Activities</button>
         <button class="filter-btn" data-group="Trivia Tuesdays">Trivia Tuesdays</button>
@@ -96,10 +100,6 @@
         <span class="activities-count" id="activitiesCount">Showing all activities</span>
       </div>
       <div id="tilesGrid" class="tiles-grid"></div>
-    </section>
-
-    <section id="tabsViewSection" class="view-section hidden" role="tabpanel">
-      <div id="tabsContainer" class="tabs-container"></div>
     </section>
 
     <section id="calendarViewSection" class="view-section hidden" role="tabpanel">
