@@ -18,7 +18,7 @@
   --color-status-yellow-border: #d4aa10;
   --color-status-gray: #e8ecf0;
   --color-status-gray-border: #cbd5e1;
-  
+
   margin: 0 auto;
   font-family: inherit;
 
@@ -63,6 +63,11 @@
     font-weight: 800;
     color: var(--color-primary);
     letter-spacing: -0.5px;
+    margin-bottom: 0;
+  }
+  
+  .app-header-text h1 + p {
+    margin-top: 0;
   }
 
   .app-header-text p {
