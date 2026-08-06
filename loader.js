@@ -20,7 +20,7 @@
     if (currentScript && currentScript.src) {
       return currentScript.src.substring(0, currentScript.src.lastIndexOf("/"));
     }
-    return "https://YOUR_GITHUB_USERNAME.github.io/ash-academy/microlearning-app";
+    return "https://cdn.jsdelivr.net/gh/jpjuliao/ash-microlearning-app@main";
   })();
 
   // 1. Guard check: Only execute if container element exists on page
@@ -31,16 +31,7 @@
   if (container.dataset.loaded === "true") return;
   container.dataset.loaded = "true";
 
-  // 2. Inject Google Fonts dynamically if not present
-  if (!document.getElementById("font-outfit-loader")) {
-    const fontLink = document.createElement("link");
-    fontLink.id = "font-outfit-loader";
-    fontLink.rel = "stylesheet";
-    fontLink.href = "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap";
-    document.head.appendChild(fontLink);
-  }
-
-  // 3. Inject CSS stylesheet dynamically
+  // 2. Inject CSS stylesheet dynamically
   if (!document.getElementById("ash-microlearning-css")) {
     const cssLink = document.createElement("link");
     cssLink.id = "ash-microlearning-css";
