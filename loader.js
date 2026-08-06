@@ -13,12 +13,16 @@
   "use strict";
 
   // Base URL pointing to hosted assets (GitHub Pages, jsDelivr, Cloudflare Pages, etc.)
-  // Change this URL to your production hosting endpoint.
   const BASE_URL = (function () {
+    const cs = document.currentScript;
+    if (cs && cs.src) {
+      return cs.src.substring(0, cs.src.lastIndexOf("/"));
+    }
     const scripts = document.getElementsByTagName("script");
-    const currentScript = scripts[scripts.length - 1];
-    if (currentScript && currentScript.src) {
-      return currentScript.src.substring(0, currentScript.src.lastIndexOf("/"));
+    for (let i = scripts.length - 1; i >= 0; i--) {
+      if (scripts[i].src && scripts[i].src.includes("loader")) {
+        return scripts[i].src.substring(0, scripts[i].src.lastIndexOf("/"));
+      }
     }
     return "https://cdn.jsdelivr.net/gh/jpjuliao/ash-microlearning-app@main";
   })();
