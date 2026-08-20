@@ -183,12 +183,97 @@
     return null;
   }
 
+  // Asynchronously resolve detailed status ('completed' or 'wrong') for 'progress' items
+  async function resolveProgressActivitiesAsync() {
+    const progressItems = allActivities.filter(act => act.status === "progress");
+    if (progressItems.length === 0) return;
+
+    let hasUpdates = false;
+
+    for (const act of progressItems) {
+      if (!act.link) continue;
+
+      try {
+        // 1. Fetch activity page HTML
+        const pageRes = await fetch(act.link);
+        if (!pageRes.ok) continue;
+        const pageHtml = await pageRes.text();
+
+        // Parse activity page for Attempts Report link element
+        const docPage = new DOMParser().parseFromString(pageHtml, "text/html");
+        const reportEl = docPage.querySelector('li[data-key="attemptsreport"] a') ||
+                         docPage.querySelector('a[href*="mod/h5pactivity/report.php"]');
+        if (!reportEl) continue;
+
+        let reportUrl = reportEl.getAttribute("href");
+        if (!reportUrl) continue;
+
+        if (!reportUrl.startsWith("http://") && !reportUrl.startsWith("https://")) {
+          const base = new URL(act.link, window.location.href);
+          reportUrl = new URL(reportUrl, base).href;
+        }
+
+        // 2. Fetch Attempts Report page HTML
+        const reportRes = await fetch(reportUrl);
+        if (!reportRes.ok) continue;
+        const reportHtml = await reportRes.text();
+
+        // 3. Analyze Attempts Report page
+        const docReport = new DOMParser().parseFromString(reportHtml, "text/html");
+        
+        const failIcon = docReport.querySelector('i[title="Fail"], i[aria-label="Fail"], i[title="Failed"], i[aria-label="Failed"]');
+        const passIcon = docReport.querySelector('i[title="Pass"], i[aria-label="Pass"], i[title="Success"], i[aria-label="Success"], i.fa-check-circle, i.text-success');
+
+        let newStatus = null;
+        if (passIcon) {
+          newStatus = "completed";
+        } else if (failIcon) {
+          newStatus = "wrong";
+        } else {
+          const text = docReport.body ? (docReport.body.innerText || docReport.body.textContent || "") : "";
+          if (text.includes("Pass") || text.includes("Passed")) {
+            newStatus = "completed";
+          } else if (text.includes("Fail") || text.includes("Failed")) {
+            newStatus = "wrong";
+          }
+        }
+
+        if (newStatus && newStatus !== act.status) {
+          act.status = newStatus;
+          hasUpdates = true;
+        }
+      } catch (err) {
+        console.warn(`Could not resolve attempts report for activity: ${act.name}`, err);
+      }
+    }
+
+    if (hasUpdates) {
+      saveActivitiesToStorage(allActivities);
+      renderTilesView();
+      renderTabsView();
+      renderCalendarView();
+    }
+  }
+
   // Load activities: Use browser storage first; scrape DOM to update storage when available
   function initData() {
     let rawItems = loadActivitiesFromStorage();
     const domItems = scrapeActivitiesFromDOM();
 
     if (domItems && domItems.length > 0) {
+      // Preserve detailed resolved statuses ('completed' / 'wrong') from stored items
+      if (rawItems && rawItems.length > 0) {
+        const storedMap = new Map();
+        rawItems.forEach(item => {
+          if (item.link) storedMap.set(item.link, item.status);
+        });
+        domItems.forEach(item => {
+          const storedStatus = storedMap.get(item.link);
+          if (storedStatus && (storedStatus === "completed" || storedStatus === "wrong")) {
+            item.status = storedStatus;
+          }
+        });
+      }
       rawItems = domItems;
       saveActivitiesToStorage(domItems);
     }
@@ -199,6 +284,11 @@
     renderTilesView();
     renderTabsView();
     renderCalendarView();
+
+    // Background asynchronous resolution of 'progress' items after page is fully loaded
+    setTimeout(() => {
+      resolveProgressActivitiesAsync();
+    }, 300);
   }
 
   // ── Controls & Switching ──
