@@ -11,6 +11,7 @@
   let currentGroupFilter = "all";
   let currentCalYear = 2025;
   let currentCalMonth = 2; // March (0-indexed)
+  let selectedStatuses = new Set(["completed", "wrong", "progress", "empty"]);
 
   // ── Helper: Base URL Resolution ──
   function getBaseUrl() {
@@ -218,6 +219,21 @@
       });
     });
 
+    // Status legend filter checkboxes
+    const statusCheckboxes = document.querySelectorAll(".status-filter-checkbox");
+    statusCheckboxes.forEach(cb => {
+      cb.addEventListener("change", () => {
+        if (cb.checked) {
+          selectedStatuses.add(cb.value);
+        } else {
+          selectedStatuses.delete(cb.value);
+        }
+        renderTilesView();
+        renderTabsView();
+        renderCalendarView();
+      });
+    });
+
     // Calendar select controls
     const mSelect = document.getElementById("monthSelect");
     const ySelect = document.getElementById("yearSelect");
@@ -289,9 +305,11 @@
     if (!grid) return;
     grid.innerHTML = "";
 
-    const filtered = currentGroupFilter === "all"
-      ? allActivities
-      : allActivities.filter(x => x.group === currentGroupFilter);
+    const filtered = allActivities.filter(x => {
+      const matchesGroup = currentGroupFilter === "all" || x.group === currentGroupFilter;
+      const matchesStatus = selectedStatuses.has(x.status || "empty");
+      return matchesGroup && matchesStatus;
+    });
 
     if (countEl) {
       countEl.textContent = `Showing ${filtered.length} of ${allActivities.length} activities`;
@@ -349,12 +367,15 @@
     const groupsList = ["Trivia Tuesdays", "Women Wednesdays", "Slide Saturdays"];
 
     groupsList.forEach(groupName => {
-      const items = allActivities.filter(x => x.group === groupName);
+      const allGroupItems = allActivities.filter(x => x.group === groupName);
+      if (allGroupItems.length === 0) return;
+
+      const total = allGroupItems.length;
+      const completedCount = allGroupItems.filter(x => x.status === "completed").length;
+
+      const items = allGroupItems.filter(x => selectedStatuses.has(x.status || "empty"));
       if (items.length === 0) return;
 
-      const logo = getLogo(groupName);
-      const total = items.length;
-      const completedCount = items.filter(x => x.status === "completed").length;
       const bodyId = `tabs-group-${groupName.replace(/[^a-zA-Z0-9]/g, "-")}`;
 
       const accEl = document.createElement("section");
@@ -369,7 +390,6 @@
 
       header.innerHTML = `
         <div class="accordion-header-left">
-          <img src="${logo}" alt="${groupName}" class="accordion-logo-img" />
           <span class="accordion-title">${groupName}</span>
           <span class="accordion-badge">${completedCount}/${total} completed</span>
         </div>
@@ -461,7 +481,7 @@
 
     const dayMap = {};
     allActivities.forEach(act => {
-      if (act.year === year && act.month === month) {
+      if (act.year === year && act.month === month && selectedStatuses.has(act.status || "empty")) {
         if (!dayMap[act.day]) dayMap[act.day] = [];
         dayMap[act.day].push(act);
       }

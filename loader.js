@@ -85,10 +85,10 @@
 
     <div class="legend" role="note" aria-label="Completion status legend">
       <span class="legend-label">Status:</span>
-      <span class="legend-item"><span class="legend-dot green"></span>Completed correctly</span>
-      <span class="legend-item"><span class="legend-dot red"></span>Completed, got it wrong</span>
-      <span class="legend-item"><span class="legend-dot yellow"></span>Started, not completed</span>
-      <span class="legend-item"><span class="legend-dot gray"></span>Not yet attempted</span>
+      <label class="legend-item"><input type="checkbox" class="status-filter-checkbox" value="completed" checked /><span class="legend-dot green"></span>Completed correctly</label>
+      <label class="legend-item"><input type="checkbox" class="status-filter-checkbox" value="wrong" checked /><span class="legend-dot red"></span>Completed, got it wrong</label>
+      <label class="legend-item"><input type="checkbox" class="status-filter-checkbox" value="progress" checked /><span class="legend-dot yellow"></span>Started, not completed</label>
+      <label class="legend-item"><input type="checkbox" class="status-filter-checkbox" value="empty" checked /><span class="legend-dot gray"></span>Not yet attempted</label>
     </div>
 
     <section id="tabsViewSection" class="view-section" role="tabpanel">
