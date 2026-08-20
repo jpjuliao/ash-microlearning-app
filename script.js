@@ -1359,45 +1359,136 @@
     return "";
   }
 
+  // Dynamic activity scraping from current page DOM
+  function scrapeActivitiesFromDOM() {
+    const nodes = document.querySelectorAll("li.activity, li.activity-wrapper, .modtype_h5pactivity");
+    if (!nodes || nodes.length === 0) return null;
+
+    const scraped = [];
+    nodes.forEach(node => {
+      // 1. Locate .activityname container or link element
+      const actNameContainer = node.querySelector(".activityname");
+      const linkEl = actNameContainer
+        ? actNameContainer.querySelector("a")
+        : node.querySelector("a.aalink, a.activityname, a[href*='mod/h5pactivity'], a");
+
+      if (!linkEl) return;
+
+      const link = linkEl.getAttribute("href") || "#";
+
+      // Extract title from .instancename inside .activityname, stripping .accesshide
+      const titleEl = (actNameContainer && actNameContainer.querySelector(".instancename")) ||
+                      node.querySelector(".instancename") ||
+                      linkEl;
+      let title = "";
+      if (titleEl) {
+        const clone = titleEl.cloneNode(true);
+        clone.querySelectorAll(".accesshide, .sr-only").forEach(el => el.remove());
+        title = clone.textContent.trim();
+      }
+      if (!title) title = linkEl.textContent.trim();
+      title = title.replace(/\s+/g, " ");
+
+      // 2. Detect series group from title
+      let group = "Trivia Tuesdays";
+      if (/women\s*wednesday/i.test(title)) {
+        group = "Women Wednesdays";
+      } else if (/slide\s*saturday/i.test(title)) {
+        group = "Slide Saturdays";
+      } else if (/trivia\s*tuesday/i.test(title)) {
+        group = "Trivia Tuesdays";
+      }
+
+      // 3. Extract date string from title (e.g., "March 4, 2025")
+      let dateStr = "";
+      const dateMatch = title.match(/([A-Z][a-z]+\s+\d{1,2}(?:,\s*|\s+)\d{4})/i);
+      if (dateMatch) {
+        dateStr = dateMatch[1];
+        if (!dateStr.includes(",")) {
+          dateStr = dateStr.replace(/([A-Z][a-z]+\s+\d{1,2})\s+(\d{4})/i, "$1, $2");
+        }
+      }
+
+      // 4. Status determination from element HTML content
+      // Mark 'Started, not completed' ("progress") if element contains:
+      // 'Done: Student must view this activity to complete it'
+      // The rest are marked 'Not yet attempted' ("empty").
+      const fullText = (node.innerText || node.textContent || "").replace(/\s+/g, " ");
+      let status = "empty"; // 'Not yet attempted'
+
+      if (
+        fullText.includes("Done: Student must view this activity to complete it") ||
+        fullText.includes("Student must view this activity to complete it")
+      ) {
+        status = "progress"; // 'Started, not completed'
+      }
+
+      scraped.push({
+        name: title,
+        date: dateStr,
+        link: link,
+        group: group,
+        status: status
+      });
+    });
+
+    return scraped.length > 0 ? scraped : null;
+  }
+
   // Process raw data into structured items
-  function processActivities(raw) {
+  function processActivities(raw, isDOM = false) {
     return raw.map((item, idx) => {
       const dInfo = parseItemDate(item);
-      let status = "empty";
-      const rem = idx % 8;
-      if (rem === 0 || rem === 4) status = "completed";
-      else if (rem === 1) status = "wrong";
-      else if (rem === 2) status = "progress";
-      else status = "empty";
+      let status = item.status;
+
+      if (!status) {
+        if (!isDOM) {
+          const rem = idx % 8;
+          if (rem === 0 || rem === 4) status = "completed";
+          else if (rem === 1) status = "wrong";
+          else if (rem === 2) status = "progress";
+          else status = "empty";
+        } else {
+          status = "empty";
+        }
+      }
 
       return {
         ...item,
         year: dInfo.year,
         month: dInfo.month,
         day: dInfo.day,
-        formattedDate: dInfo.dateStr,
+        formattedDate: dInfo.dateStr || item.date,
         status: status,
         logo: getLogo(item.group || "")
       };
     }).sort((a, b) => (a.year - b.year) || (a.month - b.month) || (a.day - b.day));
   }
 
-  // Load activities asynchronously with fallback
+  // Load activities: First attempt DOM scraping, fallback to JSON / embedded dataset
   async function initData() {
-    let raw = EMBEDDED_ACTIVITIES;
-    try {
-      const bUrl = getBaseUrl();
-      const res = await fetch(`${bUrl}/activities.json`);
-      if (res.ok) {
-        const fetched = await res.json();
-        if (Array.isArray(fetched) && fetched.length > 0) {
-          raw = fetched;
+    const domItems = scrapeActivitiesFromDOM();
+    let raw = domItems;
+    let isDOM = true;
+
+    if (!raw) {
+      isDOM = false;
+      raw = EMBEDDED_ACTIVITIES;
+      try {
+        const bUrl = getBaseUrl();
+        const res = await fetch(`${bUrl}/activities.json`);
+        if (res.ok) {
+          const fetched = await res.json();
+          if (Array.isArray(fetched) && fetched.length > 0) {
+            raw = fetched;
+          }
         }
+      } catch (e) {
+        console.warn("Using embedded fallback dataset.", e);
       }
-    } catch (e) {
-      console.warn("Using embedded fallback dataset.", e);
     }
-    allActivities = processActivities(raw);
+
+    allActivities = processActivities(raw, isDOM);
     
     initControls();
     renderTilesView();

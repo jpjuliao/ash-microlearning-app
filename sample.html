@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sample LMS Page - ASH Academy</title>
     
-    <!-- 1. Universal Embedded Loader (Add once to your LMS/Platform Header/Footer) -->
+    <!-- Universal Embedded Loader (Add once to your LMS/Platform Header/Footer) -->
     <script src="loader.js" defer></script>
   </head>
   <body>
@@ -16,8 +16,72 @@
       <p style="font-size: 13px; opacity: 0.8; margin-top: 4px;">Course Portal Demo Page</p>
     </div>
 
-    <!-- 2. Target Container: Simply place this div anywhere on your target page -->
+    <!-- Target Container: Microlearning App renders here -->
     <div class="ash-microlearning-app"></div>
+
+    <!-- 
+      Host Page Activity List (Moodle LMS Course Page HTML).
+      The script dynamically extracts title, date, link, group, and completion status directly from these elements.
+    -->
+    <div style="display: none;">
+      <ul class="section">
+        <!-- Activity 1: Trivia Tuesdays - Contains 'Done: Student must view this activity to complete it' -> Status: 'Started, not completed' -->
+        <li class="activity activity-wrapper h5pactivity modtype_h5pactivity hasinfo" id="module-81242" data-for="cmitem" data-id="81242" data-indexed="true">
+          <div class="activity-item">
+            <div class="activityname">
+              <a href="https://academy.hematology.org/mod/h5pactivity/view.php?id=81242" class=" aalink " onclick="">
+                <span class="instancename">Trivia Tuesdays March 4, 2025 <span class="accesshide "> H5P</span></span>
+              </a>
+            </div>
+            <div class="activity-info">
+              <span class="badge-sm badge-success my-1 mr-1" role="listitem">
+                <strong class="mr-2">Done:</strong>
+                <span class="font-weight-normal">Student must view this activity to complete it</span>
+              </span>
+            </div>
+          </div>
+        </li>
+
+        <!-- Activity 2: Trivia Tuesdays - No completion badge -> Status: 'Not yet attempted' -->
+        <li class="activity activity-wrapper h5pactivity modtype_h5pactivity hasinfo" id="module-81243" data-for="cmitem" data-id="81243" data-indexed="true">
+          <div class="activity-item">
+            <div class="activityname">
+              <a href="https://academy.hematology.org/mod/h5pactivity/view.php?id=81243" class=" aalink " onclick="">
+                <span class="instancename">Trivia Tuesdays March 11, 2025 <span class="accesshide "> H5P</span></span>
+              </a>
+            </div>
+          </div>
+        </li>
+
+        <!-- Activity 3: Women Wednesdays - Contains completion badge -> Status: 'Started, not completed' -->
+        <li class="activity activity-wrapper h5pactivity modtype_h5pactivity hasinfo" id="module-81244" data-for="cmitem" data-id="81244" data-indexed="true">
+          <div class="activity-item">
+            <div class="activityname">
+              <a href="https://academy.hematology.org/mod/h5pactivity/view.php?id=81244" class=" aalink " onclick="">
+                <span class="instancename">Women Wednesdays March 5, 2025 <span class="accesshide "> H5P</span></span>
+              </a>
+            </div>
+            <div class="activity-info">
+              <span class="badge-sm badge-success my-1 mr-1" role="listitem">
+                <strong class="mr-2">Done:</strong>
+                <span class="font-weight-normal">Student must view this activity to complete it</span>
+              </span>
+            </div>
+          </div>
+        </li>
+
+        <!-- Activity 4: Slide Saturdays - No completion badge -> Status: 'Not yet attempted' -->
+        <li class="activity activity-wrapper h5pactivity modtype_h5pactivity hasinfo" id="module-81245" data-for="cmitem" data-id="81245" data-indexed="true">
+          <div class="activity-item">
+            <div class="activityname">
+              <a href="https://academy.hematology.org/mod/h5pactivity/view.php?id=81245" class=" aalink " onclick="">
+                <span class="instancename">Slide Saturdays March 8, 2025 <span class="accesshide "> H5P</span></span>
+              </a>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
 
   </body>
 </html>
