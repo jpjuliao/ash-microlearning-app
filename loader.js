@@ -27,6 +27,39 @@
     return "https://cdn.jsdelivr.net/gh/jpjuliao/ash-microlearning-app@main";
   })();
 
+  // Track pending activity IDs for revalidation when visiting individual activity pages
+  function checkActivityPageBreadcrumbs() {
+    const currentUrl = window.location.href;
+    if (currentUrl.includes("/mod/h5pactivity/view.php?id=") || currentUrl.includes("mod/h5pactivity/view.php?id=")) {
+      const breadcrumbNav = document.querySelector("#page-navbar, .breadcrumbs-container, .breadcrumb, nav[aria-label='Navigation bar']");
+      const breadcrumbText = breadcrumbNav ? (breadcrumbNav.innerText || breadcrumbNav.textContent || "") : (document.body ? (document.body.innerText || document.body.textContent || "") : "");
+
+      if (breadcrumbText.includes("ASH Education Microlearnings")) {
+        const urlMatch = currentUrl.match(/id=(\d+)/);
+        if (urlMatch) {
+          const actId = urlMatch[1];
+          try {
+            const REVAL_KEY = "ash_microlearning_pending_revalidation";
+            let pending = JSON.parse(localStorage.getItem(REVAL_KEY) || "[]");
+            if (!Array.isArray(pending)) pending = [];
+            if (!pending.includes(actId)) {
+              pending.push(actId);
+              localStorage.setItem(REVAL_KEY, JSON.stringify(pending));
+            }
+          } catch (e) {
+            console.warn("Could not save pending revalidation activity ID:", e);
+          }
+        }
+      }
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", checkActivityPageBreadcrumbs);
+  } else {
+    checkActivityPageBreadcrumbs();
+  }
+
   // 1. Guard check: Only execute if container element exists on page
   const container = document.querySelector(".ash-microlearning-app");
   if (!container) return; // Exit immediately - 0 overhead on other pages!

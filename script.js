@@ -183,15 +183,44 @@
     return null;
   }
 
-  // Asynchronously resolve detailed status ('completed' or 'wrong') for 'progress' items
+  const REVAL_KEY = "ash_microlearning_pending_revalidation";
+
+  function getPendingRevalidationIds() {
+    try {
+      const stored = localStorage.getItem(REVAL_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.warn("Could not read pending revalidation IDs:", e);
+    }
+    return [];
+  }
+
+  function matchesPendingId(act, pendingIds) {
+    if (!pendingIds || pendingIds.length === 0 || !act.link) return false;
+    return pendingIds.some(id => act.link.includes(`id=${id}`) || act.link.includes(id));
+  }
+
+  // Asynchronously resolve detailed status ('completed' or 'wrong') for 'progress' & visited pending items
   async function resolveProgressActivitiesAsync() {
-    const progressItems = allActivities.filter(act => act.status === "progress");
-    if (progressItems.length === 0) return;
+    const pendingIds = getPendingRevalidationIds();
+
+    const targetItems = allActivities.filter(act => {
+      return act.status === "progress" || matchesPendingId(act, pendingIds);
+    });
+
+    if (targetItems.length === 0) return;
 
     let hasUpdates = false;
+    const processedIds = new Set();
 
-    for (const act of progressItems) {
+    for (const act of targetItems) {
       if (!act.link) continue;
+
+      const match = act.link.match(/id=(\d+)/);
+      const actId = match ? match[1] : null;
 
       try {
         // 1. Fetch activity page HTML
@@ -242,9 +271,20 @@
           act.status = newStatus;
           hasUpdates = true;
         }
+
+        if (actId) processedIds.add(actId);
       } catch (err) {
         console.warn(`Could not resolve attempts report for activity: ${act.name}`, err);
+        if (actId) processedIds.add(actId);
       }
+    }
+
+    // Clean up processed pending IDs from storage
+    if (pendingIds.length > 0) {
+      const remaining = pendingIds.filter(id => !processedIds.has(id));
+      try {
+        localStorage.setItem(REVAL_KEY, JSON.stringify(remaining));
+      } catch (e) {}
     }
 
     if (hasUpdates) {
