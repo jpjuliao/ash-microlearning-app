@@ -117,10 +117,12 @@
       const fullText = (node.innerText || node.textContent || "").replace(/\s+/g, " ");
       let status = "empty"; // 'Not yet attempted'
 
-      if (
+      const hasDoneBadge =
+        node.querySelector('.badge-success') !== null ||
         fullText.includes("Done: Student must view this activity to complete it") ||
-        fullText.includes("Student must view this activity to complete it")
-      ) {
+        fullText.includes("Done:");
+
+      if (hasDoneBadge) {
         status = "progress"; // 'Started, not completed'
       }
 
