@@ -1361,7 +1361,7 @@
 
   // Dynamic activity scraping from current page DOM
   function scrapeActivitiesFromDOM() {
-    const nodes = document.querySelectorAll("li.activity, li.activity-wrapper, .modtype_h5pactivity");
+    const nodes = document.querySelectorAll(".course-content-item-content li.activity.activity-wrapper.modtype_h5pactivity");
     if (!nodes || nodes.length === 0) return null;
 
     const scraped = [];
