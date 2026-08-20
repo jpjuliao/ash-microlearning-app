@@ -156,10 +156,44 @@
     }).sort((a, b) => (a.year - b.year) || (a.month - b.month) || (a.day - b.day));
   }
 
-  // Load activities dynamically from current page DOM
+  const STORAGE_KEY = "ash_microlearning_activities_data";
+
+  function saveActivitiesToStorage(data) {
+    try {
+      if (Array.isArray(data) && data.length > 0) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
+    } catch (e) {
+      console.warn("Could not save microlearning activities to browser storage:", e);
+    }
+  }
+
+  function loadActivitiesFromStorage() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not load microlearning activities from browser storage:", e);
+    }
+    return null;
+  }
+
+  // Load activities: Use browser storage first; scrape DOM to update storage when available
   function initData() {
+    let rawItems = loadActivitiesFromStorage();
     const domItems = scrapeActivitiesFromDOM();
-    allActivities = processActivities(domItems || []);
+
+    if (domItems && domItems.length > 0) {
+      rawItems = domItems;
+      saveActivitiesToStorage(domItems);
+    }
+
+    allActivities = processActivities(rawItems || []);
     
     initControls();
     renderTilesView();
