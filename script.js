@@ -208,10 +208,8 @@
     if (updateBtn) {
       if (isLoading) {
         updateBtn.classList.add("loading");
-        updateBtn.setAttribute("disabled", "true");
       } else {
         updateBtn.classList.remove("loading");
-        updateBtn.removeAttribute("disabled");
       }
     }
   }
