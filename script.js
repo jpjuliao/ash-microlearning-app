@@ -216,16 +216,13 @@
     }
   }
 
-  // Asynchronously resolve detailed status for activities (re-validates all non-completed on manual update)
-  async function resolveProgressActivitiesAsync(forceRevalidateNonCompleted = false) {
+  // Asynchronously resolve detailed status for started activities only
+  async function resolveProgressActivitiesAsync() {
     const pendingIds = getPendingRevalidationIds();
 
     const targetItems = allActivities.filter(act => {
-      if (forceRevalidateNonCompleted) {
-        // Re-validate ALL activities EXCEPT those already completed correctly
-        return act.status !== "completed";
-      }
-      return act.status === "progress" || act.status === "wrong" || matchesPendingId(act, pendingIds);
+      const isStarted = act.status === "progress" || act.status === "wrong";
+      return isStarted || matchesPendingId(act, pendingIds);
     });
 
     setUpdateLoading(true);
@@ -435,18 +432,18 @@
       });
     });
 
-    // Update button click listener
+    // Update button click listener: re-validates started activities only
     const updateBtn = document.getElementById("updateBtn");
     if (updateBtn) {
       updateBtn.addEventListener("click", () => {
-        resolveProgressActivitiesAsync(true);
+        resolveProgressActivitiesAsync();
       });
     }
 
-    // 1-minute recurring timer to refresh all activities except 'completed'
+    // 1-minute recurring timer to refresh started activities
     if (!window.ashMicrolearningRefreshTimer) {
       window.ashMicrolearningRefreshTimer = setInterval(() => {
-        resolveProgressActivitiesAsync(true);
+        resolveProgressActivitiesAsync();
       }, 60000); // Every 60 seconds
     }
 
