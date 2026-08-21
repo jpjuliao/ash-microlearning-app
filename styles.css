@@ -142,23 +142,30 @@
     border-color: var(--color-primary);
   }
 
-  .update-icon {
-    display: inline-block;
-    vertical-align: middle;
-    transition: color 0.2s ease;
+  .update-icon-spinner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
   }
 
-  .update-btn.loading .update-icon {
+  .update-icon {
+    display: block;
+    width: 18px;
+    height: 18px;
+  }
+
+  .update-btn.loading .update-icon-spinner {
     animation: ash-spin 0.8s linear infinite !important;
-    transform-origin: 50% 50%;
     color: var(--color-primary);
   }
 
   @keyframes ash-spin {
-    from {
+    0% {
       transform: rotate(0deg);
     }
-    to {
+    100% {
       transform: rotate(360deg);
     }
   }

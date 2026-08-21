@@ -117,10 +117,12 @@
 
       <div class="header-controls">
         <button class="update-btn" id="updateBtn" title="Refresh activities status" aria-label="Refresh activities status">
-          <svg class="update-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="23 4 23 10 17 10"></polyline>
-            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-          </svg>
+          <span class="update-icon-spinner">
+            <svg class="update-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+          </span>
         </button>
 
         <div class="view-switcher" role="tablist" aria-label="Switch views">
