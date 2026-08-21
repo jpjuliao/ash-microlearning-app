@@ -328,12 +328,10 @@
         } catch (e) {}
       }
 
-      if (hasUpdates) {
-        saveActivitiesToStorage(allActivities);
-        renderTilesView();
-        renderTabsView();
-        renderCalendarView();
-      }
+      saveActivitiesToStorage(allActivities);
+      renderTilesView();
+      renderTabsView();
+      renderCalendarView();
     } finally {
       // Ensure at least 800ms of visible spinning animation for smooth UX
       const elapsed = Date.now() - startTime;
