@@ -216,17 +216,25 @@
     }
   }
 
-  // Asynchronously resolve detailed status ('completed' or 'wrong') for 'progress', 'wrong', & visited pending items
-  async function resolveProgressActivitiesAsync() {
+  // Asynchronously resolve detailed status for activities (re-validates all non-completed on manual update)
+  async function resolveProgressActivitiesAsync(forceRevalidateNonCompleted = false) {
     const pendingIds = getPendingRevalidationIds();
 
     const targetItems = allActivities.filter(act => {
+      if (forceRevalidateNonCompleted) {
+        // Re-validate ALL activities EXCEPT those already completed correctly
+        return act.status !== "completed";
+      }
       return act.status === "progress" || act.status === "wrong" || matchesPendingId(act, pendingIds);
     });
 
-    if (targetItems.length === 0) return;
-
     setUpdateLoading(true);
+
+    if (targetItems.length === 0) {
+      setTimeout(() => setUpdateLoading(false), 400);
+      return;
+    }
+
     let hasUpdates = false;
     const processedIds = new Set();
 
@@ -309,7 +317,9 @@
         renderCalendarView();
       }
     } finally {
-      setUpdateLoading(false);
+      setTimeout(() => {
+        setUpdateLoading(false);
+      }, 400);
     }
   }
 
@@ -405,14 +415,14 @@
     const updateBtn = document.getElementById("updateBtn");
     if (updateBtn) {
       updateBtn.addEventListener("click", () => {
-        resolveProgressActivitiesAsync();
+        resolveProgressActivitiesAsync(true);
       });
     }
 
-    // 1-minute recurring timer to refresh 'started' and 'wrong' activities
+    // 1-minute recurring timer to refresh all activities except 'completed'
     if (!window.ashMicrolearningRefreshTimer) {
       window.ashMicrolearningRefreshTimer = setInterval(() => {
-        resolveProgressActivitiesAsync();
+        resolveProgressActivitiesAsync(true);
       }, 60000); // Every 60 seconds
     }
 
