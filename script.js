@@ -229,7 +229,7 @@
     const startTime = Date.now();
 
     if (targetItems.length === 0) {
-      setTimeout(() => setUpdateLoading(false), 600);
+      setTimeout(() => setUpdateLoading(false), 800);
       return;
     }
 
