@@ -436,11 +436,11 @@
     }
 
     // 1-minute recurring timer to refresh started activities
-    if (!window.ashMicrolearningRefreshTimer) {
-      window.ashMicrolearningRefreshTimer = setInterval(() => {
-        resolveProgressActivitiesAsync();
-      }, 60000); // Every 60 seconds
-    }
+    // if (!window.ashMicrolearningRefreshTimer) {
+    //   window.ashMicrolearningRefreshTimer = setInterval(() => {
+    //     resolveProgressActivitiesAsync();
+    //   }, 60000); // Every 60 seconds
+    // }
 
     // Status legend filter checkboxes
     const statusCheckboxes = document.querySelectorAll(".status-filter-checkbox");
