@@ -203,95 +203,113 @@
     return pendingIds.some(id => act.link.includes(`id=${id}`) || act.link.includes(id));
   }
 
-  // Asynchronously resolve detailed status ('completed' or 'wrong') for 'progress' & visited pending items
+  function setUpdateLoading(isLoading) {
+    const updateBtn = document.getElementById("updateBtn");
+    if (updateBtn) {
+      if (isLoading) {
+        updateBtn.classList.add("loading");
+        updateBtn.setAttribute("disabled", "true");
+      } else {
+        updateBtn.classList.remove("loading");
+        updateBtn.removeAttribute("disabled");
+      }
+    }
+  }
+
+  // Asynchronously resolve detailed status ('completed' or 'wrong') for 'progress', 'wrong', & visited pending items
   async function resolveProgressActivitiesAsync() {
     const pendingIds = getPendingRevalidationIds();
 
     const targetItems = allActivities.filter(act => {
-      return act.status === "progress" || matchesPendingId(act, pendingIds);
+      return act.status === "progress" || act.status === "wrong" || matchesPendingId(act, pendingIds);
     });
 
     if (targetItems.length === 0) return;
 
+    setUpdateLoading(true);
     let hasUpdates = false;
     const processedIds = new Set();
 
-    for (const act of targetItems) {
-      if (!act.link) continue;
+    try {
+      for (const act of targetItems) {
+        if (!act.link) continue;
 
-      const match = act.link.match(/id=(\d+)/);
-      const actId = match ? match[1] : null;
+        const match = act.link.match(/id=(\d+)/);
+        const actId = match ? match[1] : null;
 
-      try {
-        // 1. Fetch activity page HTML
-        const pageRes = await fetch(act.link);
-        if (!pageRes.ok) continue;
-        const pageHtml = await pageRes.text();
+        try {
+          // 1. Fetch activity page HTML
+          const pageRes = await fetch(act.link);
+          if (!pageRes.ok) continue;
+          const pageHtml = await pageRes.text();
 
-        // Parse activity page for Attempts Report link element
-        const docPage = new DOMParser().parseFromString(pageHtml, "text/html");
-        const reportEl = docPage.querySelector('li[data-key="attemptsreport"] a') ||
-                         docPage.querySelector('a[href*="mod/h5pactivity/report.php"]');
-        if (!reportEl) continue;
+          // Parse activity page for Attempts Report link element
+          const docPage = new DOMParser().parseFromString(pageHtml, "text/html");
+          const reportEl = docPage.querySelector('li[data-key="attemptsreport"] a') ||
+                           docPage.querySelector('a[href*="mod/h5pactivity/report.php"]');
+          if (!reportEl) continue;
 
-        let reportUrl = reportEl.getAttribute("href");
-        if (!reportUrl) continue;
+          let reportUrl = reportEl.getAttribute("href");
+          if (!reportUrl) continue;
 
-        if (!reportUrl.startsWith("http://") && !reportUrl.startsWith("https://")) {
-          const base = new URL(act.link, window.location.href);
-          reportUrl = new URL(reportUrl, base).href;
-        }
-
-        // 2. Fetch Attempts Report page HTML
-        const reportRes = await fetch(reportUrl);
-        if (!reportRes.ok) continue;
-        const reportHtml = await reportRes.text();
-
-        // 3. Analyze Attempts Report page
-        const docReport = new DOMParser().parseFromString(reportHtml, "text/html");
-        
-        const failIcon = docReport.querySelector('i[title="Fail"], i[aria-label="Fail"], i[title="Failed"], i[aria-label="Failed"]');
-        const passIcon = docReport.querySelector('i[title="Pass"], i[aria-label="Pass"], i[title="Success"], i[aria-label="Success"], i.fa-check-circle, i.text-success');
-
-        let newStatus = null;
-        if (passIcon) {
-          newStatus = "completed";
-        } else if (failIcon) {
-          newStatus = "wrong";
-        } else {
-          const text = docReport.body ? (docReport.body.innerText || docReport.body.textContent || "") : "";
-          if (text.includes("Pass") || text.includes("Passed")) {
-            newStatus = "completed";
-          } else if (text.includes("Fail") || text.includes("Failed")) {
-            newStatus = "wrong";
+          if (!reportUrl.startsWith("http://") && !reportUrl.startsWith("https://")) {
+            const base = new URL(act.link, window.location.href);
+            reportUrl = new URL(reportUrl, base).href;
           }
-        }
 
-        if (newStatus && newStatus !== act.status) {
-          act.status = newStatus;
-          hasUpdates = true;
-        }
+          // 2. Fetch Attempts Report page HTML
+          const reportRes = await fetch(reportUrl);
+          if (!reportRes.ok) continue;
+          const reportHtml = await reportRes.text();
 
-        if (actId) processedIds.add(actId);
-      } catch (err) {
-        console.warn(`Could not resolve attempts report for activity: ${act.name}`, err);
-        if (actId) processedIds.add(actId);
+          // 3. Analyze Attempts Report page
+          const docReport = new DOMParser().parseFromString(reportHtml, "text/html");
+          
+          const failIcon = docReport.querySelector('i[title="Fail"], i[aria-label="Fail"], i[title="Failed"], i[aria-label="Failed"]');
+          const passIcon = docReport.querySelector('i[title="Pass"], i[aria-label="Pass"], i[title="Success"], i[aria-label="Success"], i.fa-check-circle, i.text-success');
+
+          let newStatus = null;
+          if (passIcon) {
+            newStatus = "completed";
+          } else if (failIcon) {
+            newStatus = "wrong";
+          } else {
+            const text = docReport.body ? (docReport.body.innerText || docReport.body.textContent || "") : "";
+            if (text.includes("Pass") || text.includes("Passed")) {
+              newStatus = "completed";
+            } else if (text.includes("Fail") || text.includes("Failed")) {
+              newStatus = "wrong";
+            }
+          }
+
+          if (newStatus && newStatus !== act.status) {
+            act.status = newStatus;
+            hasUpdates = true;
+          }
+
+          if (actId) processedIds.add(actId);
+        } catch (err) {
+          console.warn(`Could not resolve attempts report for activity: ${act.name}`, err);
+          if (actId) processedIds.add(actId);
+        }
       }
-    }
 
-    // Clean up processed pending IDs from storage
-    if (pendingIds.length > 0) {
-      const remaining = pendingIds.filter(id => !processedIds.has(id));
-      try {
-        localStorage.setItem(REVAL_KEY, JSON.stringify(remaining));
-      } catch (e) {}
-    }
+      // Clean up processed pending IDs from storage
+      if (pendingIds.length > 0) {
+        const remaining = pendingIds.filter(id => !processedIds.has(id));
+        try {
+          localStorage.setItem(REVAL_KEY, JSON.stringify(remaining));
+        } catch (e) {}
+      }
 
-    if (hasUpdates) {
-      saveActivitiesToStorage(allActivities);
-      renderTilesView();
-      renderTabsView();
-      renderCalendarView();
+      if (hasUpdates) {
+        saveActivitiesToStorage(allActivities);
+        renderTilesView();
+        renderTabsView();
+        renderCalendarView();
+      }
+    } finally {
+      setUpdateLoading(false);
     }
   }
 
@@ -382,6 +400,21 @@
         renderTilesView();
       });
     });
+
+    // Update button click listener
+    const updateBtn = document.getElementById("updateBtn");
+    if (updateBtn) {
+      updateBtn.addEventListener("click", () => {
+        resolveProgressActivitiesAsync();
+      });
+    }
+
+    // 1-minute recurring timer to refresh 'started' and 'wrong' activities
+    if (!window.ashMicrolearningRefreshTimer) {
+      window.ashMicrolearningRefreshTimer = setInterval(() => {
+        resolveProgressActivitiesAsync();
+      }, 60000); // Every 60 seconds
+    }
 
     // Status legend filter checkboxes
     const statusCheckboxes = document.querySelectorAll(".status-filter-checkbox");
