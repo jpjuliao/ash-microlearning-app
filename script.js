@@ -223,20 +223,20 @@
       return isStarted || matchesPendingId(act, pendingIds);
     });
 
+    if (targetItems.length === 0) return;
+
     setUpdateLoading(true);
     const startTime = Date.now();
 
-    if (targetItems.length === 0) {
-      setTimeout(() => setUpdateLoading(false), 800);
-      return;
-    }
-
-    let hasUpdates = false;
+    let updatedCount = 0;
     const processedIds = new Set();
 
     try {
-      for (const act of targetItems) {
+      for (let i = 0; i < targetItems.length; i++) {
+        const act = targetItems[i];
         if (!act.link) continue;
+
+        console.log(`[ASH Microlearning] Validating ${i + 1} of ${targetItems.length}`);
 
         const match = act.link.match(/id=(\d+)/);
         const actId = match ? match[1] : null;
@@ -308,12 +308,11 @@
 
           if (newStatus && newStatus !== act.status) {
             act.status = newStatus;
-            hasUpdates = true;
+            updatedCount++;
           }
 
           if (actId) processedIds.add(actId);
         } catch (err) {
-          console.warn(`Could not resolve attempts report for activity: ${act.name}`, err);
           if (actId) processedIds.add(actId);
         }
       }
