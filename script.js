@@ -229,9 +229,10 @@
     });
 
     setUpdateLoading(true);
+    const startTime = Date.now();
 
     if (targetItems.length === 0) {
-      setTimeout(() => setUpdateLoading(false), 400);
+      setTimeout(() => setUpdateLoading(false), 600);
       return;
     }
 
@@ -246,10 +247,20 @@
         const actId = match ? match[1] : null;
 
         try {
-          // 1. Fetch activity page HTML
-          const pageRes = await fetch(act.link);
-          if (!pageRes.ok) continue;
-          const pageHtml = await pageRes.text();
+          // 1. Fetch activity page HTML (with local fallback for local environment testing)
+          let pageHtml = "";
+          try {
+            const pageRes = await fetch(act.link);
+            if (pageRes.ok) pageHtml = await pageRes.text();
+          } catch (e) {
+            if (window.location.protocol === "file:" || window.location.hostname === "localhost") {
+              try {
+                const fb = await fetch("sample-activity-page.html");
+                if (fb.ok) pageHtml = await fb.text();
+              } catch (e2) {}
+            }
+          }
+          if (!pageHtml) continue;
 
           // Parse activity page for Attempts Report link element
           const docPage = new DOMParser().parseFromString(pageHtml, "text/html");
@@ -265,10 +276,20 @@
             reportUrl = new URL(reportUrl, base).href;
           }
 
-          // 2. Fetch Attempts Report page HTML
-          const reportRes = await fetch(reportUrl);
-          if (!reportRes.ok) continue;
-          const reportHtml = await reportRes.text();
+          // 2. Fetch Attempts Report page HTML (with local fallback for local environment testing)
+          let reportHtml = "";
+          try {
+            const reportRes = await fetch(reportUrl);
+            if (reportRes.ok) reportHtml = await reportRes.text();
+          } catch (e) {
+            if (window.location.protocol === "file:" || window.location.hostname === "localhost") {
+              try {
+                const fb = await fetch("sample-activity-attempts.html");
+                if (fb.ok) reportHtml = await fb.text();
+              } catch (e2) {}
+            }
+          }
+          if (!reportHtml) continue;
 
           // 3. Analyze Attempts Report page
           const docReport = new DOMParser().parseFromString(reportHtml, "text/html");
@@ -317,9 +338,12 @@
         renderCalendarView();
       }
     } finally {
+      // Ensure at least 800ms of visible spinning animation for smooth UX
+      const elapsed = Date.now() - startTime;
+      const minDelay = Math.max(0, 800 - elapsed);
       setTimeout(() => {
         setUpdateLoading(false);
-      }, 400);
+      }, minDelay);
     }
   }
 

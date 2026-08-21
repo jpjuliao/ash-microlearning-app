@@ -68,13 +68,28 @@
   if (container.dataset.loaded === "true") return;
   container.dataset.loaded = "true";
 
-  // 2. Inject CSS stylesheet dynamically
-  if (!document.getElementById("ash-microlearning-css")) {
-    const cssLink = document.createElement("link");
-    cssLink.id = "ash-microlearning-css";
+  // 2. Prevent FOUC (Flash of Unstyled Content) by keeping container hidden until CSS is loaded
+  container.style.opacity = "0";
+  container.style.transition = "opacity 0.2s ease-in-out";
+
+  function showAppContainer() {
+    requestAnimationFrame(() => {
+      container.style.opacity = "1";
+    });
+  }
+
+  const cssId = "ash-microlearning-css";
+  let cssLink = document.getElementById(cssId);
+  if (!cssLink) {
+    cssLink = document.createElement("link");
+    cssLink.id = cssId;
     cssLink.rel = "stylesheet";
     cssLink.href = `${BASE_URL}/styles.css`;
+    cssLink.onload = showAppContainer;
+    cssLink.onerror = showAppContainer;
     document.head.appendChild(cssLink);
+  } else {
+    showAppContainer();
   }
 
   // 4. Inject HTML Skeleton markup into target container

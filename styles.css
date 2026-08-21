@@ -142,8 +142,19 @@
     border-color: var(--color-primary);
   }
 
+  .update-icon {
+    display: block;
+    transform-origin: center;
+    transition: transform 0.2s ease;
+  }
+
+  .update-btn.loading {
+    cursor: wait;
+  }
+
   .update-btn.loading .update-icon {
     animation: spin 0.8s linear infinite;
+    transform-origin: center;
     color: var(--color-primary);
   }
 
